@@ -56,7 +56,7 @@ void LaserSlamWorker::init(
   trajectory_pub_ = nh.advertise<nav_msgs::Path>(params_.trajectory_pub_topic,
                                                  kPublisherQueueSize, true);
   //megírom a publishert a poseStampedekhez
-  trajectory_poses_pub_=nh.advertise<geometry_msgs::PoseStamped>(params_.trajectory_poses_pub_topic, 500, false);
+  trajectory_poses_pub_=nh.advertise<geometry_msgs::PoseStamped>(params_.trajectory_poses_pub_topic, 6000, false);
 
   if (params_.publish_local_map) {
     local_map_pub_ = nh.advertise<sensor_msgs::PointCloud2>(params_.local_map_pub_topic,

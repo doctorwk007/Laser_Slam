@@ -3,9 +3,15 @@
 #include <algorithm>
 #include <utility>
 
+//debuggoláshoz, hogy fileba tudjam írni az estimated és corrected poseokat
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 
 using namespace gtsam;
+
 
 namespace laser_slam {
 
@@ -119,6 +125,29 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
   ROS_FATAL("CORRECTED POSE");
   std::cout << corr_pose << std::endl;
 
+  //és a kiírás
+  ofstream myfile;
+  try{
+    myfile.open ("/home/david/catkin_ws/src/laser_slam/laser_slam/src/debug_poses.txt", ios::app);
+
+    std::chrono::system_clock::time_point p = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(p);
+
+    myfile <<"Time:"<<std::ctime(&t)<<"\n" <<"ORIG POSE\n" << est_pose << "\n\n" << "CORRECTED_POSE\n" << corr_pose <<"\n\n" ;
+
+    myfile.close();
+  }catch (int e){
+    cout << "File írás hiba száma:  " << e << '\n';
+    myfile.open ("/home/david/catkin_ws/src/laser_slam/laser_slam/src/debug_poses.txt");
+
+    std::chrono::system_clock::time_point p = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(p);
+
+    myfile <<"Time:"<<std::ctime(&t)<<"\n" <<"ORIG POSE\n" << est_pose << "\n\n" << "CORRECTED_POSE\n" << corr_pose <<"\n\n" <<"TRANSFORMATION\n"<< localization_corr.T_orig_corr.getTransformationMatrix()<<"\n\n";
+
+    myfile.close();
+  }
+
   Eigen::Matrix3d rot_corr = corr_pose.topLeftCorner(3,3);
   Eigen::Quaterniond quat_corr(rot_corr);
   tf::Quaternion quat_corr_tf;
@@ -164,6 +193,7 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
 
   isam2_.update();
   isam2_.update();
+
   Values result(isam2_.calculateEstimate());
 
   LOG(INFO) << "Updating the trajectories after localization correction.";

@@ -84,6 +84,10 @@ class IncrementalEstimator {
 
   gtsam::ISAM2 isam2_;
 
+  //teljes factor gráfhoz
+  gtsam::NonlinearFactorGraph all_factors;
+
+
   // ICP algorithm object.
   PointMatcher::ICP icp_;
 

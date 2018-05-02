@@ -10,6 +10,7 @@ using namespace std;
 
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 
+
 using namespace gtsam;
 
 
@@ -125,7 +126,7 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
   ROS_FATAL("CORRECTED POSE");
   std::cout << corr_pose << std::endl;
 
-  //és a kiírás
+/*  //és a kiírás
   ofstream myfile;
   try{
     myfile.open ("/home/david/catkin_ws/src/laser_slam/laser_slam/src/debug_poses.txt", ios::app);
@@ -133,7 +134,7 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
     std::chrono::system_clock::time_point p = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(p);
 
-    myfile <<"Time:"<<std::ctime(&t)<<"\n" <<"ORIG POSE\n" << est_pose << "\n\n" << "CORRECTED_POSE\n" << corr_pose <<"\n\n" ;
+   myfile <<"Time:"<<std::ctime(&t)<<"\n" <<"ORIG POSE\n" << est_pose << "\n\n" << "CORRECTED_POSE\n" << corr_pose <<"\n\n" <<"TRANSFORMATION\n"<< localization_corr.T_orig_corr.getTransformationMatrix()<<"\n\n";
 
     myfile.close();
   }catch (int e){
@@ -146,7 +147,7 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
     myfile <<"Time:"<<std::ctime(&t)<<"\n" <<"ORIG POSE\n" << est_pose << "\n\n" << "CORRECTED_POSE\n" << corr_pose <<"\n\n" <<"TRANSFORMATION\n"<< localization_corr.T_orig_corr.getTransformationMatrix()<<"\n\n";
 
     myfile.close();
-  }
+  }*/
 
   Eigen::Matrix3d rot_corr = corr_pose.topLeftCorner(3,3);
   Eigen::Quaterniond quat_corr(rot_corr);
@@ -172,6 +173,7 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
 
     // Make the correction prior factor
     new_factors.push_back(laser_tracks_[track_id]->makeMeasurementFactor(corrected_pose, first_localization_noise_model_));
+    all_factors.push_back(laser_tracks_[track_id]->makeMeasurementFactor(corrected_pose, first_localization_noise_model_));
 
     first_localization_ = false;
   } 
@@ -183,9 +185,11 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
 
     // Make the correction prior factor
     new_factors.push_back(laser_tracks_[track_id]->makeMeasurementFactor(corrected_pose, localization_noise_model_));
+    all_factors.push_back(laser_tracks_[track_id]->makeMeasurementFactor(corrected_pose, localization_noise_model_));
   }
 
   ISAM2Result update_result = isam2_.update(new_factors, new_values, factor_indices_to_remove);
+
 
   // Add the prior to be removed
   prior_indices_to_remove_.insert(
@@ -195,6 +199,15 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
   isam2_.update();
 
   Values result(isam2_.calculateEstimate());
+
+
+  //factorgraph kiíratása:
+  string to_print = "Printing factor graph";
+  all_factors.print(to_print);
+  ROS_FATAL("Factor Graph Printed");
+  std::cout << to_print << std::endl;
+  ofstream os("/home/david/catkin_ws/NewValuesFactorGraaph.dot");
+  all_factors.saveGraph(os, result);
 
   LOG(INFO) << "Updating the trajectories after localization correction.";
   for (auto& track: laser_tracks_) {

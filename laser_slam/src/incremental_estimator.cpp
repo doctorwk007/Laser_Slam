@@ -200,14 +200,14 @@ void IncrementalEstimator::processLocalization(const LocalizationCorr& localizat
 
   Values result(isam2_.calculateEstimate());
 
-
+/*
   //factorgraph kiíratása:
   string to_print = "Printing factor graph";
   all_factors.print(to_print);
   ROS_FATAL("Factor Graph Printed");
   std::cout << to_print << std::endl;
   ofstream os("/home/david/catkin_ws/NewValuesFactorGraaph.dot");
-  all_factors.saveGraph(os, result);
+  all_factors.saveGraph(os, result);*/
 
   LOG(INFO) << "Updating the trajectories after localization correction.";
   for (auto& track: laser_tracks_) {
